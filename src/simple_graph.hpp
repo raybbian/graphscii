@@ -3,6 +3,14 @@
 
 #include <boost/graph/adjacency_list.hpp>
 
-typedef boost::adjacency_list<boost::hash_setS, boost::vecS, boost::undirectedS, boost::no_property, boost::no_property, boost::hash_setS> SimpleGraph;
+struct SimpleVertexProperty {
+
+};
+
+struct SimpleEdgeProperty {
+    int bicomponent_id;
+};
+
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, SimpleVertexProperty, SimpleEdgeProperty> simple_graph_t;
 
 #endif

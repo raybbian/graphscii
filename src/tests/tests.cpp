@@ -4,9 +4,10 @@
 #include "../simple_graph.hpp"
 #include "../planarization_processor.hpp"
 #include "../component_processor.hpp"
+#include "../bc_tree_generator.hpp"
 
 TEST_CASE("generate dfs spanning tree") {
-    SimpleGraph input(5);
+    simple_graph_t input(5);
     boost::add_edge(0, 1, input);
     boost::add_edge(0, 2, input);
     boost::add_edge(1, 2, input);
@@ -24,7 +25,7 @@ TEST_CASE("generate dfs spanning tree") {
 }
 
 TEST_CASE("throw on planarization of non-connected-graph") {
-    SimpleGraph input;
+    simple_graph_t input;
     boost::add_edge(0, 1, input);
     boost::add_edge(1, 2, input);
     boost::add_edge(2, 0, input);
@@ -32,11 +33,12 @@ TEST_CASE("throw on planarization of non-connected-graph") {
     boost::add_edge(4, 5, input);
     boost::add_edge(5, 6, input);
     boost::add_edge(6, 3, input);
-    CHECK_THROWS(PlanarizationProcessor(input));
+    PlanarizationProcessor pp(input);
+    CHECK_THROWS(pp.generate_dfs_spanning_tree());
 }
 
 TEST_CASE("decomposition into components") {
-    SimpleGraph input;
+    simple_graph_t input;
     boost::add_edge(0, 1, input);
     boost::add_edge(1, 2, input);
     boost::add_edge(2, 0, input);
@@ -63,5 +65,36 @@ TEST_CASE("decomposition into components") {
     REQUIRE(vertex_count == 7);
     for (auto &component : cp.components) {
         boost::write_graphviz(std::cout, component);
+    }
+}
+
+TEST_CASE("bc_tree identify cutvertices and blocks"){
+    /*this is the graph from boost documentation*/
+    simple_graph_t input(9);
+    auto B_C_edge = boost::add_edge(1, 2, input); //B C
+    boost::add_edge(1, 3, input); //B D
+    auto C_D_edge = boost::add_edge(2, 3, input); //C D
+
+    boost::add_edge(0, 1, input); //A B
+    boost::add_edge(0, 5, input); //A F
+    auto B_E_edge = boost::add_edge(1, 4, input); //B E
+    boost::add_edge(4, 5, input); //E F
+
+    auto A_G_edge = boost::add_edge(0, 6, input); //A G
+
+    boost::add_edge(6, 7, input); //G H
+    boost::add_edge(6, 8, input); //G I
+    boost::add_edge(7, 8, input); //H I
+
+    BCTreeGenerator bc(input);
+    bc.generate_bc_tree();
+    REQUIRE(bc.articulation_points.size() == 3);
+    REQUIRE(std::find(bc.articulation_points.begin(), bc.articulation_points.end(), 0) != bc.articulation_points.end()); // A
+    REQUIRE(std::find(bc.articulation_points.begin(), bc.articulation_points.end(), 1) != bc.articulation_points.end()); // B
+    REQUIRE(std::find(bc.articulation_points.begin(), bc.articulation_points.end(), 6) != bc.articulation_points.end()); // G
+
+    auto edge_it = boost::edges(input);
+    for(auto it = edge_it.first; it != edge_it.second; it++) {
+        std::cout << *it << " " << input[*it].bicomponent_id << std::endl;
     }
 }
