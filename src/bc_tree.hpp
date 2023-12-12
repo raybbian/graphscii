@@ -10,7 +10,7 @@ typedef enum {
 
 struct BCVertexProperty {
     bc_vertex_t type;
-    simple_graph_t skeleton;
+    simple_graph_t graph;
 };
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, BCVertexProperty> bc_tree_t;

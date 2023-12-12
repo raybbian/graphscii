@@ -10,8 +10,7 @@ namespace PlanarizationProcessor {
         simple_graph_t dfs_spanning_tree;
 
         /* make sure that the input graph is connected */
-        std::vector<int> components(boost::num_vertices(input_graph));
-        int num_components = boost::connected_components(input_graph, &components[0]);
+        int num_components = boost::connected_components(input_graph, boost::dummy_property_map());
         if (num_components != 1) throw std::invalid_argument("Planarization Processor input is not connected!");
 
         /* initialize our new tree */

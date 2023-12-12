@@ -9,6 +9,10 @@
 
 namespace BCTreeGenerator {
     bc_tree_t generate_bc_tree(const simple_graph_t &input_graph) {
+        /* check that connected */
+        int num_components = boost::connected_components(input_graph, boost::dummy_property_map());
+        if (num_components != 1) throw std::invalid_argument("BC Generator input must be connected!");
+
         struct BicomponentLabel {
             int bicomponent_id;
         };

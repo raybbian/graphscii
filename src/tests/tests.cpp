@@ -90,6 +90,6 @@ TEST_CASE("bc_tree identify cutvertices and blocks") {
 
     for (auto it = boost::vertices(bc_tree); it.first != it.second; it.first++) {
         std::cout << *it.first << " " << bc_tree[*it.first].type << std::endl;
-        boost::write_graphviz(std::cout, bc_tree[*it.first].skeleton);
+        boost::write_graphviz(std::cout, bc_tree[*it.first].graph);
     }
 }
