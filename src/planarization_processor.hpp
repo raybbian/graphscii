@@ -5,15 +5,10 @@
 #include <boost/graph/connected_components.hpp>
 #include "simple_graph.hpp"
 
-struct PlanarizationProcessor {
-    const simple_graph_t &input_graph;
-    simple_graph_t dfs_spanning_tree;
-    simple_graph_t output_graph;
+namespace PlanarizationProcessor {
+    simple_graph_t generate_dfs_spanning_tree(const simple_graph_t &input_graph) {
+        simple_graph_t dfs_spanning_tree;
 
-    PlanarizationProcessor(const simple_graph_t &input_graph) : input_graph(input_graph) {
-    }
-
-    void generate_dfs_spanning_tree() {
         /* make sure that the input graph is connected */
         std::vector<int> components(boost::num_vertices(input_graph));
         int num_components = boost::connected_components(input_graph, &components[0]);
@@ -44,6 +39,8 @@ struct PlanarizationProcessor {
         for (const simple_graph_t::edge_descriptor &edge: spanning_tree_edges) {
             boost::add_edge(boost::source(edge, input_graph), boost::target(edge, input_graph), dfs_spanning_tree);
         }
+
+        return dfs_spanning_tree;
     }
 };
 

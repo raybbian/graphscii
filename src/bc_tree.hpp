@@ -3,11 +3,13 @@
 
 #include <boost/graph/adjacency_list.hpp>
 
+typedef enum {
+    block_t,
+    cutvertex_t
+} bc_vertex_t;
+
 struct BCVertexProperty {
-    enum bc_vertex_t {
-        block_t,
-        cutvertex_t
-    };
+    bc_vertex_t type;
     simple_graph_t skeleton;
 };
 

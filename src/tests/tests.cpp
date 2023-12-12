@@ -14,14 +14,13 @@ TEST_CASE("generate dfs spanning tree") {
     boost::add_edge(2, 3, input);
     boost::add_edge(2, 4, input);
     boost::add_edge(3, 4, input);
-    PlanarizationProcessor pp(input);
-    pp.generate_dfs_spanning_tree();
-    REQUIRE(boost::num_edges(pp.dfs_spanning_tree) == 4);
-    REQUIRE(boost::edge(0, 1, pp.dfs_spanning_tree).second);
-    REQUIRE(boost::edge(1, 2, pp.dfs_spanning_tree).second);
-    REQUIRE(boost::edge(2, 3, pp.dfs_spanning_tree).second);
-    REQUIRE(boost::edge(3, 4, pp.dfs_spanning_tree).second);
-    boost::write_graphviz(std::cout, pp.dfs_spanning_tree);
+    auto dfs_spanning_tree = PlanarizationProcessor::generate_dfs_spanning_tree(input);
+    REQUIRE(boost::num_edges(dfs_spanning_tree) == 4);
+    REQUIRE(boost::edge(0, 1, dfs_spanning_tree).second);
+    REQUIRE(boost::edge(1, 2, dfs_spanning_tree).second);
+    REQUIRE(boost::edge(2, 3, dfs_spanning_tree).second);
+    REQUIRE(boost::edge(3, 4, dfs_spanning_tree).second);
+    boost::write_graphviz(std::cout, dfs_spanning_tree);
 }
 
 TEST_CASE("throw on planarization of non-connected-graph") {
@@ -33,8 +32,7 @@ TEST_CASE("throw on planarization of non-connected-graph") {
     boost::add_edge(4, 5, input);
     boost::add_edge(5, 6, input);
     boost::add_edge(6, 3, input);
-    PlanarizationProcessor pp(input);
-    CHECK_THROWS(pp.generate_dfs_spanning_tree());
+    CHECK_THROWS(PlanarizationProcessor::generate_dfs_spanning_tree(input));
 }
 
 TEST_CASE("decomposition into components") {
@@ -46,55 +44,52 @@ TEST_CASE("decomposition into components") {
     boost::add_edge(4, 5, input);
     boost::add_edge(5, 6, input);
     boost::add_edge(6, 3, input);
-    ComponentProcessor cp(input);
-    cp.generate_connected_components();
-    REQUIRE(cp.components.size() == 2);
-    REQUIRE(boost::edge(0, 1, cp.components[0]).second);
-    REQUIRE(boost::edge(1, 2, cp.components[0]).second);
-    REQUIRE(boost::edge(2, 0, cp.components[0]).second);
-    REQUIRE(boost::num_vertices(cp.components[0]) == 3);
-    REQUIRE(boost::edge(0, 1, cp.components[1]).second);
-    REQUIRE(boost::edge(1, 2, cp.components[1]).second);
-    REQUIRE(boost::edge(2, 3, cp.components[1]).second);
-    REQUIRE(boost::edge(3, 0, cp.components[1]).second);
-    REQUIRE(boost::num_vertices(cp.components[1]) == 4);
+    auto components = ComponentProcessor::generate_connected_components(input);
+    REQUIRE(components.size() == 2);
+    REQUIRE(boost::edge(0, 1, components[0]).second);
+    REQUIRE(boost::edge(1, 2, components[0]).second);
+    REQUIRE(boost::edge(2, 0, components[0]).second);
+    REQUIRE(boost::num_vertices(components[0]) == 3);
+    REQUIRE(boost::edge(0, 1, components[1]).second);
+    REQUIRE(boost::edge(1, 2, components[1]).second);
+    REQUIRE(boost::edge(2, 3, components[1]).second);
+    REQUIRE(boost::edge(3, 0, components[1]).second);
+    REQUIRE(boost::num_vertices(components[1]) == 4);
     unsigned long vertex_count = 0;
-    for (const auto& component: cp.components) {
+    for (const auto &component: components) {
         vertex_count += boost::num_vertices(component);
     }
     REQUIRE(vertex_count == 7);
-    for (auto &component : cp.components) {
+    for (auto &component: components) {
         boost::write_graphviz(std::cout, component);
     }
 }
 
-TEST_CASE("bc_tree identify cutvertices and blocks"){
+TEST_CASE("bc_tree identify cutvertices and blocks") {
     /*this is the graph from boost documentation*/
     simple_graph_t input(9);
-    auto B_C_edge = boost::add_edge(1, 2, input); //B C
+    boost::add_edge(1, 2, input); //B C
     boost::add_edge(1, 3, input); //B D
-    auto C_D_edge = boost::add_edge(2, 3, input); //C D
+    boost::add_edge(2, 3, input); //C D
 
     boost::add_edge(0, 1, input); //A B
     boost::add_edge(0, 5, input); //A F
-    auto B_E_edge = boost::add_edge(1, 4, input); //B E
+    boost::add_edge(1, 4, input); //B E
     boost::add_edge(4, 5, input); //E F
 
-    auto A_G_edge = boost::add_edge(0, 6, input); //A G
+    boost::add_edge(0, 6, input); //A G
 
     boost::add_edge(6, 7, input); //G H
     boost::add_edge(6, 8, input); //G I
     boost::add_edge(7, 8, input); //H I
 
-    BCTreeGenerator bc(input);
-    bc.generate_bc_tree();
-    REQUIRE(bc.articulation_points.size() == 3);
-    REQUIRE(std::find(bc.articulation_points.begin(), bc.articulation_points.end(), 0) != bc.articulation_points.end()); // A
-    REQUIRE(std::find(bc.articulation_points.begin(), bc.articulation_points.end(), 1) != bc.articulation_points.end()); // B
-    REQUIRE(std::find(bc.articulation_points.begin(), bc.articulation_points.end(), 6) != bc.articulation_points.end()); // G
+    bc_tree_t bc_tree = BCTreeGenerator::generate_bc_tree(input);
+    REQUIRE(boost::num_edges(bc_tree) == boost::num_vertices(bc_tree) - 1);
 
-    auto edge_it = boost::edges(input);
-    for(auto it = edge_it.first; it != edge_it.second; it++) {
-        std::cout << *it << " " << input[*it].bicomponent_id << std::endl;
+    boost::write_graphviz(std::cout, bc_tree);
+
+    for (auto it = boost::vertices(bc_tree); it.first != it.second; it.first++) {
+        std::cout << *it.first << " " << bc_tree[*it.first].type << std::endl;
+        boost::write_graphviz(std::cout, bc_tree[*it.first].skeleton);
     }
 }
