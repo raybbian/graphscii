@@ -2,13 +2,14 @@
 #define BC_TREE_GENERATOR_HPP
 
 #include <boost/graph/biconnected_components.hpp>
+#include <boost/graph/connected_components.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/graph/graphviz.hpp>
 #include "bc_tree.hpp"
 
 namespace BCTreeGenerator {
-    bc_tree_t generate_bc_tree(const simple_graph_t &input_graph) {
+    bc_tree_t generate_bc_tree(const basic_graph_t &input_graph) {
         /* check that connected */
         int num_components = boost::connected_components(input_graph, boost::dummy_property_map());
         if (num_components != 1) throw std::invalid_argument("BC Generator input must be connected!");
@@ -35,7 +36,7 @@ namespace BCTreeGenerator {
 
         /* iterating over edges, associate u and v with their corresponding blocks, and add the proper edges to each block */
         std::vector<std::unordered_map<unsigned long, unsigned long>> vertex_map(num_bicomponents.first);
-        std::vector<simple_graph_t> blocks(num_bicomponents.first);
+        std::vector<basic_graph_t> blocks(num_bicomponents.first);
         for (auto it = boost::edges(copy_of_input_graph); it.first != it.second; it.first++) {
             unsigned long from_vertex = boost::source(*it.first, copy_of_input_graph);
             unsigned long to_vertex = boost::target(*it.first, copy_of_input_graph);
@@ -60,7 +61,7 @@ namespace BCTreeGenerator {
         std::vector<int> is_cutvertex(boost::num_vertices(copy_of_input_graph),
                                       -1); //-1 if not, id of vertex in bc tree else
         for (int cutvertex: articulation_points) {
-            simple_graph_t cutvertex_graph(1);
+            basic_graph_t cutvertex_graph(1);
             BCVertexProperty new_vertex{cutvertex_t, cutvertex_graph};
             is_cutvertex[cutvertex] = boost::add_vertex(new_vertex, output);
         }

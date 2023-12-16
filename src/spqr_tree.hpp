@@ -3,8 +3,6 @@
 
 #include <boost/graph/adjacency_list.hpp>
 
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS> simple_digraph_t;
-
 typedef enum {
     s_t,
     p_t,
@@ -14,7 +12,7 @@ typedef enum {
 
 struct SPQRVertexProperty {
     spqr_vertex_t type;
-    simple_digraph_t st_skeleton;
+    basic_graph_t graph;
 };
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, SPQRVertexProperty> spqr_tree_t;
