@@ -7,7 +7,7 @@ from tsm.utils import *
 
 class Orthogonalize:
     def __init__(self, planarize: Planarize):
-        self.G = planarize.G.copy()
+        self.G = planarize.G
         self.dcel = planarize.dcel
         self.network_flow = None
         self.flow_dict = None
@@ -38,6 +38,29 @@ class Orthogonalize:
                 # type f arcs
                 self.network_flow.add_edge(v, "sink", cost=0, capacity=self.G.degree[v] - 4)
 
+            for i, face in enumerate(self.dcel.faces.values()):
+                face_edges = [e.id for e in face.surround_half_edges()]
+                face_len = len(face_edges)
+
+                if face_len <= 3 and i != 0:
+                    # type b arcs
+                    self.network_flow.add_edge("source", face.id, cost=0, capacity=4 - face_len)
+                elif i == 0:
+                    # type c arc
+                    self.network_flow.add_edge(face.id, "sink", cost=0, capacity=face_len + 4)
+                elif face_len >= 5:
+                    # type c arc
+                    self.network_flow.add_edge(face.id, "sink", cost=0, capacity=face_len - 4)
+
+                for j, edge in enumerate(face_edges):
+                    n_edge = face_edges[(j + 1) % face_len]
+                    # create two edges here instead of one just in case of cut vertex like node,
+                    # where it is incident to the same face more than once (such that flow is simple)
+                    # type d arcs here, this one stores the l_edge and r_edge of the v->f arc
+                    self.network_flow.add_edge(edge[1], ('vertex_face_dummy', edge), cost=0, capacity=math.inf,
+                                               l_edge=edge, r_edge=n_edge, face=face.id)
+                    self.network_flow.add_edge(('vertex_face_dummy', edge), face.id, cost=0, capacity=math.inf)
+
             e_list = [e.id for e in self.dcel.vertices[v].surround_half_edges()]
             f_list = [e.inc.id for e in self.dcel.vertices[v].surround_half_edges()]
             k = len(e_list)
@@ -51,7 +74,9 @@ class Orthogonalize:
                 self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_l', next_i), cost=2 * c + 1, capacity=1,
                                            edge=e_list[next_i], destination=f_list[next_i])
                 # type h2, the original face to vertex reverse edges, stores l_edge and r_edge and what is supposed to be u
-                self.network_flow.add_edge((f'h_aux_{v}_face', i), v, cost=0, capacity=1, l_edge=e_list[next_i][::-1],
+                # if this vertex is a dummy, make this reverse capacity 0: it's not supposed to be able to have 0 deg bend
+                rev_capacity = 1 if not v_is_dummy(v) else 0
+                self.network_flow.add_edge((f'h_aux_{v}_face', i), v, cost=0, capacity=rev_capacity, l_edge=e_list[next_i][::-1],
                                            r_edge=e_list[i], face=f_list[i])
                 # type h3
                 self.network_flow.add_edge((f'h_aux_{v}_edge_l', i), (f'h_aux_{v}_face', i), cost=0, capacity=1)
@@ -59,29 +84,6 @@ class Orthogonalize:
                 # type h4
                 self.network_flow.add_edge((f'h_aux_{v}_edge_l', i), (f'h_aux_{v}_edge_r', i), cost=-c, capacity=1)
                 self.network_flow.add_edge((f'h_aux_{v}_edge_r', i), (f'h_aux_{v}_edge_l', i), cost=-c, capacity=1)
-
-        for i, face in enumerate(self.dcel.faces.values()):
-            face_edges = [e.id for e in face.surround_half_edges()]
-            face_len = len(face_edges)
-
-            if face_len <= 3 and i != 0:
-                # type b arcs
-                self.network_flow.add_edge("source", face.id, cost=0, capacity=4 - face_len)
-            elif i == 0:
-                # type c arc
-                self.network_flow.add_edge(face.id, "sink", cost=0, capacity=face_len + 4)
-            elif face_len >= 5:
-                # type c arc
-                self.network_flow.add_edge(face.id, "sink", cost=0, capacity=face_len - 4)
-
-            for j, edge in enumerate(face_edges):
-                n_edge = face_edges[(j + 1) % face_len]
-                # create two edges here instead of one just in case of cut vertex like node,
-                # where it is incident to the same face more than once (such that flow is simple)
-                # type d arcs here, this one stores the l_edge and r_edge of the v->f arc
-                self.network_flow.add_edge(edge[1], ('vertex_face_dummy', edge), cost=0, capacity=math.inf,
-                                           l_edge=edge, r_edge=n_edge, face=face.id)
-                self.network_flow.add_edge(('vertex_face_dummy', edge), face.id, cost=0, capacity=math.inf)
 
     def solve_network_flow(self):
         self.flow_dict = nx.max_flow_min_cost(self.network_flow, "source", "sink", "capacity", "cost")
@@ -146,7 +148,7 @@ class Orthogonalize:
 
         self.flow_dict = {}
         for u, v, data in self.clean_flow.edges(data=True):
-            key = data['l_edge'] if 'l_edge' in data else data['edge']
+            key = data['r_edge'] if 'r_edge' in data else data['edge']
             if u not in self.flow_dict:
                 self.flow_dict[u] = {}
             if v not in self.flow_dict[u]:

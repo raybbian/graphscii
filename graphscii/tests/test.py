@@ -2,6 +2,7 @@ import unittest
 import networkx as nx
 import random
 
+from tsm.compaction import Compaction
 from tsm.orthogonalize import Orthogonalize
 from tsm.planarize import Planarize
 from tsm.preprocess import Preprocess
@@ -53,8 +54,8 @@ class PlanarizeGraph(unittest.TestCase):
 
 
 class OrthogonalizeGraph(unittest.TestCase):
-    def test_orthogonalize_k_5(self):
-        graph = nx.complete_graph(5)
+    def test_orthogonalize_k_6(self):
+        graph = nx.complete_graph(6)
         processed = Preprocess(graph)
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
@@ -72,6 +73,16 @@ class OrthogonalizeGraph(unittest.TestCase):
         # print(*orthogonalized.clean_flow.edges(data=True), sep='\n')
         # print(*orthogonalized.flow_dict.items(), sep='\n')
 
+
+class CompactGraph(unittest.TestCase):
+    def test_compact_k_6(self):
+        graph = nx.complete_graph(6)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        #print(*[(u, v, data['flow']) for u, v, data in orthogonalized.clean_flow.edges(data=True) if data['flow'] > 0], sep='\n')
+        compacted = Compaction(orthogonalized)
 
 if __name__ == '__main__':
     unittest.main()

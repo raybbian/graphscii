@@ -12,3 +12,7 @@ def v_is_face(vertex):
 
 def v_is_face_dummy(vertex):
     return vertex[0] == 'vertex_face_dummy'
+
+
+def v_is_dummy(vertex):
+    return vertex[0] == 'loop_dummy' or vertex[0] == 'crossing_dummy'

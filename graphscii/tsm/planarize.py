@@ -11,9 +11,10 @@ class Planarize:
     """
 
     def __init__(self, simplify: Simplify):
-        self.G = simplify.G.copy()
+        self.G = simplify.G
         self.d_cnt = 0
-        self.edges_to_add = set(edge for edge in self.G.edges())
+        self.ori_edges = [edge for edge in self.G.edges()]
+        self.edges_to_add = [edge for edge in self.G.edges()]
         self.form_maximal_planar_subgraph()
 
         for edge in self.edges_to_add:
@@ -30,7 +31,7 @@ class Planarize:
         self.G.clear_edges()
         self.G.add_edges_from([edge for edge in T.edges()])
         added_edges.update([edge for edge in T.edges()])
-        self.edges_to_add.difference_update(added_edges)
+        self.edges_to_add = [edge for edge in self.ori_edges if edge not in added_edges]
 
         for edge in self.edges_to_add:
             self.G.add_edge(edge[0], edge[1])
@@ -38,7 +39,7 @@ class Planarize:
                 self.G.remove_edge(edge[0], edge[1])
             else:
                 added_edges.add(edge)
-        self.edges_to_add.difference_update(added_edges)
+        self.edges_to_add = [edge for edge in self.ori_edges if edge not in added_edges]
 
     def add_edge_form_dummies(self, edge):
         # can possibly do online updates instead of creating new planar dual every time, but i too smol brain
