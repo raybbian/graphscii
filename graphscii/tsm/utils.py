@@ -1,0 +1,14 @@
+def v_is_h_aux(vertex):
+    return vertex[0][:5] == 'h_aux'
+
+
+def v_is_structural(vertex):
+    return vertex[0] == 'loop_dummy' or vertex[0] == 'vertex' or vertex[0] == 'crossing_dummy'
+
+
+def v_is_face(vertex):
+    return vertex[0] == 'face'
+
+
+def v_is_face_dummy(vertex):
+    return vertex[0] == 'vertex_face_dummy'
