@@ -12,18 +12,19 @@ class Compaction:
 
         self.flow_dict = copy.deepcopy(orthogonalize.flow_dict)
         self.bend_point_processor()
-        self.vertex_point_processor()
 
         side_dict = self.face_side_processor()
+        self.vertex_point_processor(side_dict)
+
         self.refine_faces(side_dict)
 
     def bend_point_processor(self):
         bends = {}
         for he in self.dcel.half_edges.values():
             lf, rf = he.twin.inc, he.inc
-            flow = self.flow_dict[lf.id][rf.id][he.id]
-            r_flow = self.flow_dict[rf.id][lf.id][he.twin.id]
-            if flow > 0 and he.twin not in bends:
+            r_flow = self.flow_dict[lf.id][rf.id][he.twin.id]
+            flow = self.flow_dict[rf.id][lf.id][he.id]
+            if (flow > 0 or r_flow > 0) and he.twin not in bends:
                 bends[he] = ['r'] * flow + ['l'] * r_flow
 
         b_cnt = 0
@@ -42,24 +43,24 @@ class Compaction:
                 self.G.add_edge(prev_node, curr_node)
                 self.dcel.add_node_between(prev_node, curr_node, v)
                 self.flow_dict.setdefault(curr_node, {}).setdefault(
-                    lf_id, {})[curr_node, prev_node] = 1 if bend == 'r' else 3
+                    lf_id, {})[curr_node, prev_node] = 3 if bend == 'r' else 1
                 self.flow_dict.setdefault(curr_node, {}).setdefault(
-                    rf_id, {})[curr_node, next_node] = 3 if bend == 'r' else 1  # twin edge, bends are reversed
+                    rf_id, {})[curr_node, next_node] = 1 if bend == 'r' else 3  # twin edge, bends are reversed
                 b_cnt += 1
 
             self.flow_dict[v][lf_id][v, ('bend', b_cnt - 1)] = self.flow_dict[v][lf_id].pop((v, u))
             self.G.add_edge(('bend', b_cnt - 1), v)
 
 
-    def vertex_point_processor(self):
+    def vertex_point_processor(self, side_dict):
         """
         For every vertex, need to determine its side length, and assign it a square of vertices
         """
         side_len = 0
-        for v in self.G.nodes:
+        for v in self.G.nodes():
             # find longest sequence of 0s -> that's how long a side has to be
             # because it is circular, but cannot contain all zeroes, just loop over array twice
-            flow_in_list = [self.flow_dict[v][edge.inc.id][edge.id] for edge in self.dcel.vertices[v].surround_half_edges()]
+            flow_in_list = [self.flow_dict[he.twin.succ.ori.id][he.twin.inc.id][he.twin.succ.id] for he in self.dcel.vertices[v].surround_half_edges()]
             cnt = 0
             for flow_in_val in flow_in_list + flow_in_list:
                 if flow_in_val == 0:
@@ -67,8 +68,7 @@ class Compaction:
                     side_len = max(side_len, cnt)
                 else:
                     cnt = 0
-
-        # need to make square out of 8 * side_len vertices, and assign each edge to the appropriate one
+        print(side_len)
 
     def face_side_processor(self):
         side_dict = {}
@@ -103,6 +103,7 @@ class Compaction:
                 elif (side + 1) % 4 == next_side:  # go right
                     cnt += 1
                 elif (side + 2) % 4 == next_side:  # go back
+                    # need to distinguish between turn around and 180 degree
                     cnt -= 2
                 else:  # go left
                     cnt -= 1

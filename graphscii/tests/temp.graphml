@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d0" for="node" attr.name="label" attr.type="string" />
+  <graph edgedefault="undirected">
+    <node id="('vertex', 0)">
+      <data key="d0">('vertex', 0)</data>
+    </node>
+    <node id="('vertex', 1)">
+      <data key="d0">('vertex', 1)</data>
+    </node>
+    <node id="('vertex', 2)">
+      <data key="d0">('vertex', 2)</data>
+    </node>
+    <node id="('vertex', 3)">
+      <data key="d0">('vertex', 3)</data>
+    </node>
+    <node id="('vertex', 4)">
+      <data key="d0">('vertex', 4)</data>
+    </node>
+    <node id="('crossing_dummy', 0)">
+      <data key="d0">('crossing_dummy', 0)</data>
+    </node>
+    <node id="('bend', 0)">
+      <data key="d0">('bend', 0)</data>
+    </node>
+    <node id="('bend', 1)">
+      <data key="d0">('bend', 1)</data>
+    </node>
+    <node id="('bend', 2)">
+      <data key="d0">('bend', 2)</data>
+    </node>
+    <node id="('bend', 3)">
+      <data key="d0">('bend', 3)</data>
+    </node>
+    <node id="('bend', 4)">
+      <data key="d0">('bend', 4)</data>
+    </node>
+    <node id="('bend', 5)">
+      <data key="d0">('bend', 5)</data>
+    </node>
+    <node id="('bend', 6)">
+      <data key="d0">('bend', 6)</data>
+    </node>
+    <node id="('bend', 7)">
+      <data key="d0">('bend', 7)</data>
+    </node>
+    <edge source="('vertex', 0)" target="('vertex', 2)" />
+    <edge source="('vertex', 0)" target="('bend', 0)" />
+    <edge source="('vertex', 0)" target="('bend', 1)" />
+    <edge source="('vertex', 0)" target="('bend', 2)" />
+    <edge source="('vertex', 1)" target="('vertex', 4)" />
+    <edge source="('vertex', 1)" target="('crossing_dummy', 0)" />
+    <edge source="('vertex', 1)" target="('bend', 3)" />
+    <edge source="('vertex', 1)" target="('bend', 4)" />
+    <edge source="('vertex', 2)" target="('vertex', 3)" />
+    <edge source="('vertex', 2)" target="('bend', 3)" />
+    <edge source="('vertex', 2)" target="('bend', 5)" />
+    <edge source="('vertex', 3)" target="('bend', 0)" />
+    <edge source="('vertex', 3)" target="('bend', 4)" />
+    <edge source="('vertex', 3)" target="('bend', 6)" />
+    <edge source="('vertex', 4)" target="('bend', 1)" />
+    <edge source="('vertex', 4)" target="('bend', 6)" />
+    <edge source="('vertex', 4)" target="('bend', 7)" />
+    <edge source="('crossing_dummy', 0)" target="('bend', 2)" />
+    <edge source="('crossing_dummy', 0)" target="('bend', 5)" />
+    <edge source="('crossing_dummy', 0)" target="('bend', 7)" />
+  </graph>
+</graphml>
