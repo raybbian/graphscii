@@ -27,18 +27,18 @@ class Orthogonalize:
         for v in self.G.nodes():
             self.network_flow.add_node(v, demand=self.G.degree[v] - 4)
 
-        for i, face in enumerate(self.dcel.faces.values()):
+        for face in self.dcel.faces.values():
             face_edges = [e.id for e in face.surround_half_edges()]
             face_len = len(face_edges)
 
-            if i == 0:
+            if face.is_external:
                 self.network_flow.add_node(face.id, demand=face_len + 4)
             else:
                 self.network_flow.add_node(face.id, demand=face_len - 4)
 
             for j, edge in enumerate(face_edges):
                 n_edge = face_edges[(j + 1) % face_len]
-                self.network_flow.add_edge(edge[1], face.id, cost=0, capacity=math.inf, key=n_edge)
+                self.network_flow.add_edge(edge[1], face.id, cost=0, capacity=3, key=n_edge)
 
         c = 6 * self.G.number_of_nodes()
         for v in self.G.nodes():
@@ -54,33 +54,36 @@ class Orthogonalize:
             for i in range(k):
                 next_i = (i + 1) % k
                 prev_i = (i - 1) % k
-                if not v_is_dummy(v):
-                    # type h1, edge stores the edge this face to face edge is going across, destination stores the face it goes to
-                    self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_r', i), cost=2 * c + 1, capacity=1,
-                                               key=e_list[i], destination=f_list[prev_i])
-                    self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_l', next_i), cost=2 * c + 1, capacity=1,
-                                               key=e_list[next_i], destination=f_list[next_i])
-                    # type h2, the original face to vertex reverse edges, stores l_edge and r_edge and what is supposed to be u
-                    self.network_flow.add_edge((f'h_aux_{v}_face', i), v, cost=0, capacity=1,
-                                               key=e_list[i], origin=f_list[i])
-                    # type h3
-                    self.network_flow.add_edge((f'h_aux_{v}_edge_l', i), (f'h_aux_{v}_face', i), cost=0, capacity=1)
-                    self.network_flow.add_edge((f'h_aux_{v}_edge_r', next_i), (f'h_aux_{v}_face', i), cost=0,
-                                               capacity=1)
-                    # type h4
-                    self.network_flow.add_edge((f'h_aux_{v}_edge_l', i), (f'h_aux_{v}_edge_r', i), cost=-c, capacity=1)
-                    self.network_flow.add_edge((f'h_aux_{v}_edge_r', i), (f'h_aux_{v}_edge_l', i), cost=-c, capacity=1)
-                else:
-                    self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_r', i), cost=1, capacity=math.inf,
-                                               key=e_list[i], destination=f_list[prev_i])
-                    self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_l', next_i), cost=1, capacity=math.inf,
-                                               key=e_list[next_i], destination=f_list[next_i])
-                    self.network_flow.add_edge((f'h_aux_{v}_edge_l', i), f_list[prev_i], cost=0, capacity=math.inf)
-                    self.network_flow.add_edge((f'h_aux_{v}_edge_r', next_i), f_list[next_i], cost=0, capacity=math.inf)
+                # if not v_is_dummy(v):
+                # type h1, edge stores the edge this face to face edge is going across, destination stores the face it goes to
+                self.network_flow.add_edge(f_list[i], (f'h_aux_edge_r', (v, i)), cost=2 * c + 1, capacity=1,
+                                           key=e_list[i], destination=f_list[prev_i])
+                self.network_flow.add_edge(f_list[i], (f'h_aux_edge_l', (v, next_i)), cost=2 * c + 1, capacity=1,
+                                           key=e_list[next_i], destination=f_list[next_i])
+                # type h2, the original face to vertex reverse edges, stores l_edge and r_edge and what is supposed to be u
+                self.network_flow.add_edge((f'h_aux_face', (v, i)), v, cost=0, capacity=1,
+                                           key=e_list[i], origin=f_list[i])
+                # type h3
+                self.network_flow.add_edge((f'h_aux_edge_l', (v, i)), (f'h_aux_face', (v, i)), cost=0, capacity=1)
+                self.network_flow.add_edge((f'h_aux_edge_r', (v, next_i)), (f'h_aux_face', (v, i)), cost=0,
+                                           capacity=1)
+                # type h4
+                self.network_flow.add_edge((f'h_aux_edge_l', (v, i)), (f'h_aux_edge_r', (v, i)), cost=-c, capacity=1)
+                self.network_flow.add_edge((f'h_aux_edge_r', (v, i)), (f'h_aux_edge_l', (v, i)), cost=-c, capacity=1)
+                # else:
+                #     self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_r', i), cost=1, capacity=math.inf,
+                #                                key=e_list[i], destination=f_list[prev_i])
+                #     self.network_flow.add_edge(f_list[i], (f'h_aux_{v}_edge_l', next_i), cost=1, capacity=math.inf,
+                #                                key=e_list[next_i], destination=f_list[next_i])
+                #     self.network_flow.add_edge((f'h_aux_{v}_edge_l', i), f_list[prev_i], cost=0, capacity=math.inf)
+                #     self.network_flow.add_edge((f'h_aux_{v}_edge_r', next_i), f_list[next_i], cost=0, capacity=math.inf)
 
 
     def solve_network_flow(self):
-        self.flow_dict = nx.min_cost_flow(self.network_flow, "demand", "capacity", "cost")
+        # self.flow_dict = nx.min_cost_flow(self.network_flow, "demand", "capacity", "cost")
+        flow_cost, self.flow_dict = nx.capacity_scaling(self.network_flow, "demand", "capacity", "cost")
+        # print(*self.flow_dict.items(), sep='\n')
+        print(flow_cost)
 
     def strip_h_structures(self):
         """
@@ -98,12 +101,20 @@ class Orthogonalize:
             flow = self.flow_dict[u][v][key]
 
             if v_is_face(u) and v_is_h_aux(v):
+                # this is f to f face, cost is 1
                 self.clean_flow.add_edge(u, data['destination'], pseudokey=key, flow=flow)
+                # i think we need to be careful here, cannot just add all the flows for all crossings over an edge...
+                # these flows over these edges determine the crossing of that edge just before the specific vertex
+                # so the order of the bends does matter in this case...
+                # print(f'flow from{u} to {v} for edge {key} has flow {flow}')
+                # the key here is the half edge that points away from the current vertex, so a flow across
             elif v_is_h_aux(u) and v_is_structural(v):
+                # this is face to v , cost is 0
                 self.clean_flow.add_edge(data['origin'], v, pseudokey=key, flow=flow)
             elif v_is_h_aux(u) and v_is_h_aux(v):
                 pass
             else:
+                # these are vertex to face, cost is 0
                 self.clean_flow.add_edge(u, v, pseudokey=key, flow=flow)
 
     def clean_network_flow(self):

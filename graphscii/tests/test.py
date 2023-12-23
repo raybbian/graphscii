@@ -69,6 +69,39 @@ class CompactGraph(unittest.TestCase):
         orthogonalized = Orthogonalize(planarized)
         compacted = Compaction(orthogonalized)
 
+    def test_compact_k_6(self):
+        graph = nx.complete_graph(6)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        compacted = Compaction(orthogonalized)
+
+
+    def test_compact_k_4(self):
+        graph = nx.complete_graph(4)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        compacted = Compaction(orthogonalized)
+
+
+    def test_compact_star_5(self):
+        graph = nx.complete_graph(5)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        compacted = Compaction(orthogonalized)
+
+    def test_compact_single_node(self):
+        graph = nx.star_graph(0)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        compacted = Compaction(orthogonalized)
 
 if __name__ == '__main__':
     unittest.main()

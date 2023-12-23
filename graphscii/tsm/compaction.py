@@ -7,25 +7,30 @@ import collections
 from dcel import Dcel
 from dcel.face import Face
 from tsm.orthogonalize import Orthogonalize
-from tsm.utils import v_is_corner, v_is_bend, v_is_vertex
+from tsm.utils import v_is_corner, v_is_bend, v_is_vertex, v_is_structural
 
 
 class Compaction:
     def __init__(self, orthogonalize: Orthogonalize):
         self.G = orthogonalize.G
         self.dcel = orthogonalize.dcel
-
         self.flow_dict = copy.deepcopy(orthogonalize.flow_dict)
+        self.port_cnt = -1
+
         self.bend_point_processor()
-
         self.ori_ext_edge = self.dcel.ext_face.inc
-
         self.side_dict = self.face_side_processor()
-        self.vertex_point_processor()
+
+        for face in self.dcel.faces.values():
+            print('FACE', face, 'is_ext?', face.is_external)
+            for edge in face.surround_half_edges():
+                print(edge, self.side_dict[edge])
 
         for node in self.G.nodes():
             self.G.nodes[node]['label'] = str(node)
         nx.write_graphml(self.G, "temp.graphml")
+
+        self.vertex_point_processor()
 
         self.refine_faces()
 
@@ -71,21 +76,24 @@ class Compaction:
         def get_min_side_len():
             side_len = 0
             for v in self.G.nodes():
-                counter = collections.Counter([self.side_dict[he] for he in self.dcel.vertices[v].surround_half_edges()])
+                counter = collections.Counter(
+                    [self.side_dict[he] for he in self.dcel.vertices[v].surround_half_edges()])
                 side_len = max(side_len, counter.most_common(1)[0][1])
             return side_len
+
+        side_len = get_min_side_len()
+        self.port_cnt = 2 * side_len + 1  # this is how many "ports" there are on each side
 
         def get_port_node(v, side, number):
             return 'side', (v, side, number)
 
         def get_mirror_port(port_node, other_v):
             type = port_node[0]
-            v = port_node[1][0]
             side = port_node[1][1]
             number = port_node[1][2]
             if type == 'side':
                 opp_side = (side + 2) % 4
-                opp_number = (port_cnt - number)
+                opp_number = (self.port_cnt - number - 1)
                 return 'side', (other_v, opp_side, opp_number)
             elif type == 'corner':
                 raise Exception("not supported for corners")
@@ -117,14 +125,14 @@ class Compaction:
                 number = port_node[1][2]
                 if number == 0:
                     return get_corner_node(v, side), get_port_node(v, side, number + 1)
-                elif number == port_cnt - 1:
+                elif number >= self.port_cnt - 1:
                     return get_port_node(v, side, number - 1), get_corner_node(v, (side + 1) % 4)
                 else:
                     return get_port_node(v, side, number - 1), get_port_node(v, side, number + 1)
             elif type == 'corner':
                 v = port_node[1][0]
                 side = port_node[1][1]
-                return get_port_node(v, (side + 3) % 4, port_cnt - 1), get_port_node(v, side, 0)
+                return get_port_node(v, (side + 3) % 4, self.port_cnt - 1), get_port_node(v, side, 0)
 
         def connect_port_nodes(port_u, port_v, u_prev, u_succ):
             assert port_v == get_adjacent_port_nodes(port_u)[1]  # port v must be next node in loop
@@ -148,26 +156,28 @@ class Compaction:
                 self.side_dict[he] = get_port_edge_side(port_u, port_v)
                 self.side_dict[he.twin] = (self.side_dict[he] + 2) % 4
 
-        side_len = get_min_side_len()
-        port_cnt = 2 * side_len + 1  # this is how many "ports" there are on each side
-
         origin_port = {}
         for u in self.G.nodes():
             # because side list is circular, shift it such that no segment of edges all on the same side is chopped
-            side_list = collections.deque([(he, self.side_dict[he]) for he in self.dcel.vertices[u].surround_half_edges()])
+            side_list = collections.deque(
+                [(he, self.side_dict[he]) for he in self.dcel.vertices[u].surround_half_edges()])
+            count = 0
             while side_list[0][1] == side_list[-1][1]:  # ensure that a side isn't chopped by the array
+                if count > len(side_list):
+                    raise Exception("All edges connected here leave the same side...")
                 side_list.append(side_list.popleft())
+                count += 1
 
             l_cnt, r_cnt = 0, 1
             for he, side in list(side_list):
                 next_dir = self.side_dict[he.succ]
-                if (side + 3) % 4 == next_dir:
+                if (side + 3) % 4 == next_dir and v_is_bend(he.twin.ori.id):
                     l_cnt -= 1
 
             for he, side in list(side_list):
                 next_dir = self.side_dict[he.succ]
                 _, v = he.get_points()
-                if v_is_vertex(u) and v_is_bend(v):  # vertex to bend
+                if v_is_structural(u) and v_is_bend(v):  # vertex to bend
                     assert he not in origin_port
                     if (side + 1) % 4 == next_dir:
                         # this edge bends to the right
@@ -179,7 +189,7 @@ class Compaction:
                         origin_port[he] = get_port_node(he.ori.id, side, side_len + l_cnt)
                         origin_port[he.twin] = get_mirror_port(origin_port[he], v)
                         l_cnt += 1
-                elif v_is_bend(u) and v_is_vertex(v):
+                elif v_is_bend(u) and v_is_structural(v):
                     pass
                 else:
                     assert he not in origin_port
@@ -207,7 +217,7 @@ class Compaction:
             he_l2a = self.dcel.half_edges[u, ori_port]
             he_a2b = self.dcel.half_edges[ori_port, dest_port]
             he_b2r = self.dcel.half_edges[dest_port, v]
-            
+
             self.side_dict[he_l2a] = self.side_dict[he_l2r]
             self.side_dict[he_l2a.twin] = (self.side_dict[he_l2r] + 2) % 4
             self.side_dict[he_a2b] = self.side_dict[he_l2r]
@@ -254,11 +264,18 @@ class Compaction:
             # clockwise
             for port in get_port_list(get_corner_node(v, 0)):
                 prev_port, next_port = get_adjacent_port_nodes(port)
+                cur_port, next_next_port = get_adjacent_port_nodes(next_port)
+                assert cur_port == port
+
+                prev_he = self.dcel.half_edges[prev_port, cur_port]
+                succ_he = self.dcel.half_edges[next_port, next_next_port]
                 he = self.dcel.half_edges[port, next_port]
 
+                # if the face adjacent to this guy is still in the face list, pop
                 if he.inc.id in self.dcel.faces:
                     self.dcel.faces.pop(he.inc.id)
 
+                # check if our new face is created, and establish it if is
                 face_id = ('face_vertex', v)
                 if face_id not in self.dcel.faces:
                     new_face = Face(face_id)
@@ -266,8 +283,8 @@ class Compaction:
                     new_face.inc = he
 
                 he.inc = self.dcel.faces[face_id]
-                he.prev = self.dcel.half_edges[prev_port, port]
-                he.prev.succ = he
+                he.prev = prev_he
+                he.succ = succ_he
 
         new_ext_edge = (origin_port[self.ori_ext_edge], origin_port[self.ori_ext_edge.twin])
         for face in self.dcel.faces.values():
