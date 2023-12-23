@@ -16,3 +16,19 @@ def v_is_face_dummy(vertex):
 
 def v_is_dummy(vertex):
     return vertex[0] == 'loop_dummy' or vertex[0] == 'crossing_dummy'
+
+
+def v_is_crossing_dummy(vertex):
+    return vertex[0] == 'crossing_dummy'
+
+
+def v_is_corner(vertex):
+    return vertex[0][:6] == 'corner'
+
+
+def v_is_bend(vertex):
+    return vertex[0] == 'bend'
+
+
+def v_is_vertex(vertex):
+    return vertex[0] == 'vertex'

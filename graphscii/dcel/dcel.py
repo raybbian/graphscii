@@ -157,3 +157,41 @@ class Dcel:
         insert_halfedge(v, u, face, prev_vu, succ_vu)
         self.half_edges[u, v].twin = self.half_edges[v, u]
         self.half_edges[v, u].twin = self.half_edges[u, v]
+
+    def extend_vertex_between_edges(self, u, new_v, prev_he, succ_he):
+        """
+        -(prev_he)--> u ---(succ_he)->
+                      |
+                    new_v
+
+                      face
+        """
+        assert prev_he.inc == succ_he.inc
+        assert prev_he.twin.ori.id == u
+        assert succ_he.ori.id == u
+        assert succ_he == prev_he.succ
+        assert new_v not in self.vertices
+        assert u in self.vertices
+
+        face = prev_he.inc
+        # add the new vertex to dcel
+        v = Vertex(new_v)
+        self.vertices[new_v] = v
+
+        he = HalfEdge((u, new_v))
+        self.half_edges[u, new_v] = he
+        he_twin = HalfEdge((new_v, u))
+        self.half_edges[new_v, u] = he_twin
+
+        v.inc = he_twin
+
+        prev_uv = prev_he
+        succ_uv = he_twin
+        prev_vu = he
+        succ_vu = succ_he
+
+        he.set(he_twin, self.vertices[u], prev_uv, succ_uv, face)
+        he_twin.set(he, self.vertices[new_v], prev_vu, succ_vu, face)
+
+        prev_he.succ = he
+        succ_he.prev = he_twin

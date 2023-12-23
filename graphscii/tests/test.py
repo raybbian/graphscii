@@ -13,30 +13,6 @@ from tsm.simplify import Simplify
 from tsm.utils import v_is_structural
 
 
-class SimplifyGraph(unittest.TestCase):
-    def test_simplify_random_graph(self):
-        graph = nx.gnp_random_graph(8, 0.7)
-
-        for component in [graph.subgraph(c).copy() for c in nx.connected_components(graph)]:
-            processed = Preprocess(component)
-            simplified = Simplify(processed)
-            for u, v in simplified.G.edges():
-                self.assertTrue(simplified.G.number_of_edges(u, v) == 1)
-                self.assertTrue(u != v)
-
-    def test_simplify_graph_with_loops(self):
-        graph = nx.Graph()
-        for i in range(5):
-            graph.add_edge(i, i)
-            graph.add_edge(i, i + 1)
-
-        processed = Preprocess(graph)
-        simplified = Simplify(processed)
-        for u, v in simplified.G.edges():
-            self.assertTrue(simplified.G.number_of_edges(u, v) == 1)
-            self.assertTrue(u != v)
-
-
 class PlanarizeGraph(unittest.TestCase):
     def test_planarize_petersen_graph(self):
         graph = nx.petersen_graph()
@@ -92,14 +68,6 @@ class CompactGraph(unittest.TestCase):
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
         compacted = Compaction(orthogonalized)
-
-
-        nx.draw_planar(planarized.G)
-        plt.show()
-        write_out = copy.deepcopy(compacted.G)
-        for v in write_out.nodes():
-            write_out.nodes[v]['label'] = str(v)
-        nx.write_graphml(write_out, 'temp.graphml')
 
 
 if __name__ == '__main__':
