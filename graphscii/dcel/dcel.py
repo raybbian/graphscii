@@ -49,7 +49,7 @@ class Dcel:
                 self.faces[face_id] = face
 
                 nodes_id = embedding.traverse_face(*he.get_points())
-                for v1_id, v2_id in zip(nodes_id, nodes_id[1:]+nodes_id[:1]):
+                for v1_id, v2_id in zip(nodes_id, nodes_id[1:] + nodes_id[:1]):
                     other = self.half_edges[v1_id, v2_id]
                     assert not other.inc
                     other.inc = face
@@ -87,7 +87,7 @@ class Dcel:
             self.half_edges[v1, v2].twin = self.half_edges[v2, v1]
             self.half_edges[v2, v1].twin = self.half_edges[v1, v2]
 
-    def connect(self, face: Face, u, v, halfedge_side, side_uv):  # u, v in same face
+    def connect(self, face: Face, u, v, halfedge_side, side_uv, succ_uv=None, succ_vu=None):  # u, v in same face
         def insert_halfedge(u, v, f, prev_he, succ_he):
             he = HalfEdge((u, v))
             self.half_edges[u, v] = he
@@ -123,7 +123,11 @@ class Dcel:
                     return side_dict[side]
 
         he_u = select(side_uv, hes_u)
+        if he_u is None:
+            raise Exception(f"Failed to select for {v}")
         he_v = select((side_uv + 2) % 4, hes_v)
+        if he_v is None:
+            raise Exception(f"Failed to select for {v}")
 
         prev_uv = he_u.prev
         succ_uv = he_v
@@ -146,6 +150,7 @@ class Dcel:
             he.set(None, self.vertices[u], prev_he, succ_he, f)
             prev_he.succ = he
             succ_he.prev = he
+
         he_u = self.vertices[u].get_half_edge(face)
         he_v = self.vertices[v].get_half_edge(face)
         prev_uv = he_u.prev

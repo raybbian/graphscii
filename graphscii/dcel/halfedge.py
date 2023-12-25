@@ -25,7 +25,7 @@ class HalfEdge:
             he = he.succ
 
     def __repr__(self) -> str:
-        return f'{self.ori}->{self.twin.ori}'
+        return f'halfedge({self.ori}->{self.twin.ori})'
 
     def __hash__(self):
         return hash(self.id)

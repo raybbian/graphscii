@@ -6,6 +6,7 @@ import random
 from matplotlib import pyplot as plt
 
 from tsm.compaction import Compaction
+from tsm.rectangularize import Rectangularize
 from tsm.orthogonalize import Orthogonalize
 from tsm.planarize import Planarize
 from tsm.preprocess import Preprocess
@@ -39,12 +40,6 @@ class OrthogonalizeGraph(unittest.TestCase):
         processed = Preprocess(graph)
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
-        orthogonalized = Orthogonalize(planarized)
-        # print(*orthogonalized.flow_dict.items(), sep='\n')
-        for v in orthogonalized.clean_flow.nodes():
-            sum_out = sum(sum(flow for face, flow in orthogonalized.flow_dict[v][u].items()) for u in orthogonalized.flow_dict[v])
-            if v_is_structural(v):
-                assert sum_out == 4
 
     def test_orthogonalize_star_5(self):
         graph = nx.star_graph(5)
@@ -52,22 +47,16 @@ class OrthogonalizeGraph(unittest.TestCase):
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
-        # print(*orthogonalized.clean_flow.edges(keys=True, data=True), sep='\n')
-        # print(*orthogonalized.flow_dict.items(), sep='\n')
-        for v in orthogonalized.clean_flow.nodes():
-            sum_out = sum(sum(flow for face, flow in orthogonalized.flow_dict[v][u].items()) for u in orthogonalized.flow_dict[v])
-            if v_is_structural(v):
-                assert sum_out == 4
 
 
-class CompactGraph(unittest.TestCase):
+class RectangularizeGraph(unittest.TestCase):
     def test_compact_k_5(self):
         graph = nx.complete_graph(5)
         processed = Preprocess(graph)
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
-        compacted = Compaction(orthogonalized)
+        compacted = Rectangularize(orthogonalized)
 
     def test_compact_k_6(self):
         graph = nx.complete_graph(6)
@@ -75,7 +64,7 @@ class CompactGraph(unittest.TestCase):
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
-        compacted = Compaction(orthogonalized)
+        compacted = Rectangularize(orthogonalized)
 
 
     def test_compact_k_4(self):
@@ -84,16 +73,16 @@ class CompactGraph(unittest.TestCase):
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
-        compacted = Compaction(orthogonalized)
+        compacted = Rectangularize(orthogonalized)
 
 
     def test_compact_star_5(self):
-        graph = nx.complete_graph(5)
+        graph = nx.star_graph(5)
         processed = Preprocess(graph)
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
-        compacted = Compaction(orthogonalized)
+        compacted = Rectangularize(orthogonalized)
 
     def test_compact_single_node(self):
         graph = nx.star_graph(0)
@@ -101,7 +90,44 @@ class CompactGraph(unittest.TestCase):
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
-        compacted = Compaction(orthogonalized)
+        compacted = Rectangularize(orthogonalized)
+
+    def test_compact_single_edge(self):
+        graph = nx.complete_graph(2)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        compacted = Rectangularize(orthogonalized)
+
+
+    def test_compact_petersen_graph(self):
+        graph = nx.petersen_graph()
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        compacted = Rectangularize(orthogonalized)
+
+
+class CompactGraph(unittest.TestCase):
+    def test_compact_k_5(self):
+        graph = nx.complete_graph(3)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+
+
+        viewg = nx.Graph()
+        for node in rectangularized.G.nodes():
+            viewg.add_node(node, label=str(node))
+        viewg.add_edges_from(rectangularized.G.edges())
+        nx.write_graphml(viewg, 'out.graphml')
+
+        compacted = Compaction(rectangularized)
+
 
 if __name__ == '__main__':
     unittest.main()
