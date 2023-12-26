@@ -1,18 +1,17 @@
-import copy
 import unittest
 import networkx as nx
-import random
+from timeit import default_timer as timer
 
-from matplotlib import pyplot as plt
 from networkx.generators.harary_graph import hnm_harary_graph
 
-from tsm.compaction import Compaction
-from tsm.rectangularize import Rectangularize
-from tsm.orthogonalize import Orthogonalize
-from tsm.planarize import Planarize
-from tsm.preprocess import Preprocess
-from tsm.simplify import Simplify
-from tsm.utils import v_is_structural
+from graphscii import to_ascii
+from graphscii.algo.compaction import Compaction
+from graphscii.algo.display import Display
+from graphscii.algo.rectangularize import Rectangularize
+from graphscii.algo.orthogonalize import Orthogonalize
+from graphscii.algo.planarize import Planarize
+from graphscii.algo.preprocess import Preprocess
+from graphscii.algo.simplify import Simplify
 
 
 class PlanarizeGraph(unittest.TestCase):
@@ -118,8 +117,8 @@ class CompactGraph(unittest.TestCase):
         rectangularized = Rectangularize(orthogonalized)
         compacted = Compaction(rectangularized)
 
-    def test_compact_star_7(self):
-        graph = nx.star_graph(7)
+    def test_compact_star_8(self):
+        graph = nx.star_graph(8)
         processed = Preprocess(graph)
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
@@ -172,15 +171,6 @@ class CompactGraph(unittest.TestCase):
         rectangularized = Rectangularize(orthogonalized)
         compacted = Compaction(rectangularized)
 
-    def test_compact_find_bad(self):
-        graph = nx.complete_graph(14)
-        processed = Preprocess(graph)
-        simplified = Simplify(processed)
-        planarized = Planarize(simplified)
-        orthogonalized = Orthogonalize(planarized)
-        rectangularized = Rectangularize(orthogonalized)
-        compacted = Compaction(rectangularized)
-
     def test_goldman_harary(self):
         graph = hnm_harary_graph(11, 27)
         processed = Preprocess(graph)
@@ -189,6 +179,54 @@ class CompactGraph(unittest.TestCase):
         orthogonalized = Orthogonalize(planarized)
         rectangularized = Rectangularize(orthogonalized)
         compacted = Compaction(rectangularized)
+
+    def test_random_graph(self):
+        graph = nx.gnp_random_graph(15, 0.5)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
+
+class DisplayGraph(unittest.TestCase):
+    def test_print(self):
+        start = timer()
+        graph = nx.gnm_random_graph(10, 30)
+        after_graph = timer()
+        processed = Preprocess(graph)
+        after_process = timer()
+        simplified = Simplify(processed)
+        after_simplify = timer()
+        planarized = Planarize(simplified)
+        after_planarize = timer()
+        orthogonalized = Orthogonalize(planarized)
+        after_orth = timer()
+        rectangularized = Rectangularize(orthogonalized)
+        after_rect = timer()
+        compacted = Compaction(rectangularized)
+        after_compact = timer()
+        display = Display(compacted)
+        end = timer()
+
+        display.write_to_file("output.txt")
+
+        print(f'Processing graph with {nx.number_of_nodes(graph)} nodes and {nx.number_of_edges(graph)} edges')
+        print(f'Created graph in {after_graph - start} seconds')
+        print(f'Processed graph in {after_process - after_graph} seconds')
+        print(f'Simplified graph in {after_simplify - after_process} seconds')
+        print(f'Planarized graph in {after_planarize - after_simplify} seconds')
+        print(f'Orthogonalized graph in {after_orth - after_planarize} seconds')
+        print(f'Rectangularized graph in {after_rect - after_orth} seconds')
+        print(f'Displayed graph in {end - after_compact}')
+        print(f'Compacted graph in {after_compact - after_rect} seconds')
+        print(f'Took total of {end - start} seconds')
+
+
+class TestProcess(unittest.TestCase):
+    def test_process(self):
+        graph = nx.gnm_random_graph(8, 20)
+        print(to_ascii(graph, with_labels=True))
 
 
 if __name__ == '__main__':

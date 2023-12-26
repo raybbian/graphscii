@@ -1,27 +1,34 @@
 from collections import defaultdict
 
 import networkx as nx
-import matplotlib.pyplot as plt
 
-from tsm.rectangularize import Rectangularize
-from tsm.utils import v_is_vertex, v_is_struct_dummy, v_is_rect_dummy
+from .rectangularize import Rectangularize
 
 
 class Compaction:
-    def __init__(self, rectangularize: Rectangularize):
+    def __init__(self, rectangularize: Rectangularize, with_labels=False):
         self.G = rectangularize.G
         self.side_dict = rectangularize.side_dict
         self.dcel = rectangularize.dcel
-        self.v_len = rectangularize.port_cnt + 2  # if there are 7 ports here, then side length is 7 + 2
         self.triangle_faces = rectangularize.triangle_faces
         self.triangle_edges = rectangularize.triangle_edges
+        self.rect_edges = rectangularize.rect_edges
+        self.bend_offsets = rectangularize.bend_offsets
+        self.ori_edges = rectangularize.ori_edges
+
+        if with_labels:
+            max_label_w = max(len(label) for label in self.G.nodes())
+        else:
+            max_label_w = 0
+
+        self.v_w = max(max([abs(coord[0]) for _, coord in self.bend_offsets.items()]) + 1, max_label_w // 2 + 1)
+        self.v_h = max([abs(coord[1]) for _, coord in self.bend_offsets.items()]) + 1
+        self.e_w = 4
+        self.e_h = 1
 
         self.length_dict = self.tidy_rectangle_compaction()
         self.pos = self.layout()
-
-        # cleanup
-        nx.draw(self.G, pos=self.pos, nodelist=[node for node in self.G.nodes if v_is_vertex(node)])
-        plt.show()
+        self.apply_bend_offsets()
 
     def tidy_rectangle_compaction(self):
         def build_flow(target_side):
@@ -34,7 +41,9 @@ class Compaction:
                         continue
                     lf_id = lf.id
                     rf_id = rf.id if not rf.is_external else ('face', 'end')
-                    flow.add_edge(lf_id, rf_id, key=he.id, lowerbound=5, cost=1, capacity=2 ** 32)
+                    # for each side with a vertex, add 2?
+                    lb = (2 * self.v_w + self.e_w) if target_side % 2 == 1 else (2 * self.v_h + self.e_h)
+                    flow.add_edge(lf_id, rf_id, key=he.id, lowerbound=lb, cost=1, capacity=2 ** 32)
             flow.add_edge(self.dcel.ext_face.id, ('face', 'end'), key='extend_edge', lowerbound=0, cost=0,
                           capacity=2 ** 32)
             for node in flow.nodes():
@@ -47,10 +56,26 @@ class Compaction:
             def get_demand(flow_dict, node):
                 in_flow = sum(flow_dict[u][v][key] for u, v, key in flow.in_edges(node, keys=True))
                 out_flow = sum(flow_dict[u][v][key] for u, v, key in flow.out_edges(node, keys=True))
-                if in_flow == 0:
+                if in_flow == 0 and node != ('face', -1):
                     print('inflow 0', node)
-                if out_flow == 0:
+                    print(
+                        f"bad face:{[(he, he in self.triangle_edges or he.twin in self.triangle_edges, self.side_dict[he]) for he in self.dcel.faces[node].surround_half_edges()]}")
+                    print(f"surrounded by:")
+                    for face in list(self.dcel.faces[node].surround_faces()):
+                        print(
+                            f"face: {[(he, he in self.triangle_edges or he.twin in self.triangle_edges, self.side_dict[he]) for he in face.surround_half_edges()]}")
+                    raise Exception(
+                        "This should not happen, something went wrong during rectangularization. I think I know where this stems from, open a GH issue and I will get back to you.")
+                if out_flow == 0 and node != ('face', 'end'):
                     print('outflow 0', node)
+                    print(
+                        f"bad face:{[(he, he in self.triangle_edges or he.twin in self.triangle_edges, self.side_dict[he]) for he in self.dcel.faces[node].surround_half_edges()]}")
+                    print(f"surrounded by:")
+                    for face in list(self.dcel.faces[node].surround_faces()):
+                        print(
+                            f"face: {[(he, he in self.triangle_edges or he.twin in self.triangle_edges, self.side_dict[he]) for he in face.surround_half_edges()]}")
+                    raise Exception(
+                        "this should not happen, something went wrong during rectangularization. I think I know where this stems from, open a GH issue and I will get back to you.")
                 return in_flow - out_flow
 
             def split():
@@ -123,3 +148,8 @@ class Compaction:
 
         set_coord(self.dcel.ext_face.inc, 0, 0)
         return pos
+
+    def apply_bend_offsets(self):
+        for vertex in self.pos:
+            delta = self.bend_offsets.get(vertex, (0, 0))
+            self.pos[vertex] = self.pos[vertex][0] + delta[0], self.pos[vertex][1] + delta[1]

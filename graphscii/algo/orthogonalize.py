@@ -1,12 +1,10 @@
 import collections
 
 import networkx as nx
-import math
-
 import pulp
 
-from tsm.planarize import Planarize
-from tsm.utils import *
+from .planarize import Planarize
+from .utils import v_is_struct_dummy, v_is_face, v_is_structural, v_is_h_aux
 
 
 class Orthogonalize:
@@ -53,10 +51,12 @@ class Orthogonalize:
             surround_edges = list(self.dcel.vertices[v].surround_half_edges())
             surround_faces = [he.inc for he in surround_edges]  # identical index edge is one to the left
             for i, face in enumerate(surround_faces):
-                prev_h_face = (f"h_aux_face", (v, surround_faces[(i - 1) % len(surround_faces)].id, (i - 1) % len(surround_faces)))
+                prev_h_face = (
+                f"h_aux_face", (v, surround_faces[(i - 1) % len(surround_faces)].id, (i - 1) % len(surround_faces)))
                 prev_edge = surround_edges[i]
                 helper_face = (f"h_aux_face", (v, face.id, i))
-                next_h_face = (f"h_aux_face", (v, surround_faces[(i + 1) % len(surround_faces)].id, (i + 1) % len(surround_faces)))
+                next_h_face = (
+                f"h_aux_face", (v, surround_faces[(i + 1) % len(surround_faces)].id, (i + 1) % len(surround_faces)))
                 next_edge = surround_edges[(i + 1) % len(surround_edges)]
                 self.network_flow.add_edge(helper_face, v, cost=0, capacity=1, key=prev_edge.id)
                 self.network_flow.add_edge(face.id, prev_h_face, cost=1, capacity=1, key=prev_edge.id)
@@ -98,7 +98,8 @@ class Orthogonalize:
                 n_helper_face = (f"h_aux_face", (node, next_face, (i + 1) % len(surround_faces)))
                 key = surround_edges[(i + 1) % len(surround_edges)].twin
 
-                problem += (lp_dict[cur_face][n_helper_face][key.id] + lp_dict[next_face][helper_face][key.twin.id] <= 1)
+                problem += (lp_dict[cur_face][n_helper_face][key.id] + lp_dict[next_face][helper_face][
+                    key.twin.id] <= 1)
 
         problem += pulp.lpSum(
             lp_dict[u][v][key] * data['cost'] for u, v, key, data in self.network_flow.edges(keys=True, data=True))
@@ -120,7 +121,8 @@ class Orthogonalize:
                     if v_is_face(u) and v_is_face(v):
                         he = self.dcel.half_edges[key]
                         if int(lp_dict[u][v][key].varValue) > 0:
-                            assert len(self.bend_dict[he.twin.id]) == 0  # should not have left and right bends over middle of edge
+                            assert len(self.bend_dict[
+                                           he.twin.id]) == 0  # should not have left and right bends over middle of edge
                             for i in range(int(lp_dict[u][v][key].varValue)):
                                 self.bend_dict[he.id].append('r')
                                 self.bend_dict[he.twin.id].append('l')

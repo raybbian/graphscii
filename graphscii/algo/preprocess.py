@@ -1,5 +1,5 @@
 import networkx as nx
-import copy
+
 
 class Preprocess:
     """
@@ -8,9 +8,8 @@ class Preprocess:
 
     def __init__(self, G: nx.Graph | nx.DiGraph | nx.MultiGraph | nx.MultiDiGraph):
         if type(G) == nx.MultiGraph or type(G) == nx.MultiDiGraph or type(G) == nx.DiGraph:
-            raise ValueError("Graphs with multiple edges not supported")
+            raise ValueError("Only undirected, simple graphs are currently supported")
 
         self.G = G.copy()
         label_mapping = {v: ('vertex', v) for v in self.G.nodes()}
         nx.relabel_nodes(self.G, label_mapping, copy=False)
-
