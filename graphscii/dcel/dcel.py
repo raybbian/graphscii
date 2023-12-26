@@ -124,10 +124,10 @@ class Dcel:
 
         he_u = select(side_uv, hes_u)
         if he_u is None:
-            raise Exception(f"Failed to select for {v}")
+            raise Exception(f"Failed to select for {u}, {hes_u}")
         he_v = select((side_uv + 2) % 4, hes_v)
         if he_v is None:
-            raise Exception(f"Failed to select for {v}")
+            raise Exception(f"Failed to select for {v}, {hes_v}")
 
         prev_uv = he_u.prev
         succ_uv = he_v

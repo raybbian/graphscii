@@ -1,8 +1,10 @@
 from collections import defaultdict
 
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from tsm.rectangularize import Rectangularize
+from tsm.utils import v_is_vertex, v_is_struct_dummy, v_is_rect_dummy
 
 
 class Compaction:
@@ -10,9 +12,16 @@ class Compaction:
         self.G = rectangularize.G
         self.side_dict = rectangularize.side_dict
         self.dcel = rectangularize.dcel
+        self.v_len = rectangularize.port_cnt + 2  # if there are 7 ports here, then side length is 7 + 2
+        self.triangle_faces = rectangularize.triangle_faces
+        self.triangle_edges = rectangularize.triangle_edges
 
         self.length_dict = self.tidy_rectangle_compaction()
         self.pos = self.layout()
+
+        # cleanup
+        nx.draw(self.G, pos=self.pos, nodelist=[node for node in self.G.nodes if v_is_vertex(node)])
+        plt.show()
 
     def tidy_rectangle_compaction(self):
         def build_flow(target_side):
@@ -20,9 +29,12 @@ class Compaction:
             for he, side in self.side_dict.items():
                 if side == target_side:
                     lf, rf = he.twin.inc, he.inc
+                    # skip triangle faces
+                    if he in self.triangle_edges or he.twin in self.triangle_edges:
+                        continue
                     lf_id = lf.id
                     rf_id = rf.id if not rf.is_external else ('face', 'end')
-                    flow.add_edge(lf_id, rf_id, key=he.id, lowerbound=1, cost=1, capacity=2 ** 32)
+                    flow.add_edge(lf_id, rf_id, key=he.id, lowerbound=5, cost=1, capacity=2 ** 32)
             flow.add_edge(self.dcel.ext_face.id, ('face', 'end'), key='extend_edge', lowerbound=0, cost=0,
                           capacity=2 ** 32)
             for node in flow.nodes():
@@ -35,6 +47,10 @@ class Compaction:
             def get_demand(flow_dict, node):
                 in_flow = sum(flow_dict[u][v][key] for u, v, key in flow.in_edges(node, keys=True))
                 out_flow = sum(flow_dict[u][v][key] for u, v, key in flow.out_edges(node, keys=True))
+                if in_flow == 0:
+                    print('inflow 0', node)
+                if out_flow == 0:
+                    print('outflow 0', node)
                 return in_flow - out_flow
 
             def split():
@@ -76,7 +92,7 @@ class Compaction:
                 else:
                     hv_flow_dict = hor_flow_dict
 
-                length = hv_flow_dict[lf_id][rf_id][he.id]
+                length = hv_flow_dict[lf_id][rf_id][he.id] if he not in self.triangle_edges else 0
                 halfedge_length[he] = length
                 halfedge_length[he.twin] = length
 

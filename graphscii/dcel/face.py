@@ -8,7 +8,7 @@ class Face:
         return len(list(self.surround_vertices()))
 
     def __repr__(self) -> str:
-        return f'face({self.id})'
+        return f'f({self.id})'
 
     def surround_faces(self):  # clockwise, duplicated!!
         for he in self.surround_half_edges():

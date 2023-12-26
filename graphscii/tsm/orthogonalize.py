@@ -27,7 +27,7 @@ class Orthogonalize:
 
         for v in self.G.nodes():
             self.network_flow.add_node(v, demand=self.G.degree[v] - 4)
-            if v_is_dummy(v):
+            if v_is_struct_dummy(v):
                 continue
             surround_faces = list(self.dcel.vertices[v].surround_faces())
             for i, face in enumerate(surround_faces):
@@ -48,7 +48,7 @@ class Orthogonalize:
                 self.network_flow.add_edge(face.id, o_face.id, cost=1, capacity=2 ** 32, key=edge.id)
 
         for v in self.G.nodes():
-            if v_is_dummy(v):
+            if v_is_struct_dummy(v):
                 continue
             surround_edges = list(self.dcel.vertices[v].surround_half_edges())
             surround_faces = [he.inc for he in surround_edges]  # identical index edge is one to the left
@@ -84,7 +84,7 @@ class Orthogonalize:
 
         # define bundles
         for node in self.G.nodes():
-            if v_is_dummy(node):
+            if v_is_struct_dummy(node):
                 continue
             # for each face1 to helper_v_face2
             # and face2 to helper_v_face1

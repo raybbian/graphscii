@@ -14,9 +14,11 @@ def v_is_face_dummy(vertex):
     return vertex[0] == 'vertex_face_dummy'
 
 
-def v_is_dummy(vertex):
+def v_is_struct_dummy(vertex):
     return vertex[0] == 'loop_dummy' or vertex[0] == 'crossing_dummy'
 
+def v_is_rect_dummy(vertex):
+    return vertex[0] == 'rect_dummy'
 
 def v_is_crossing_dummy(vertex):
     return vertex[0] == 'crossing_dummy'

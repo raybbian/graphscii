@@ -4,6 +4,7 @@ import networkx as nx
 import random
 
 from matplotlib import pyplot as plt
+from networkx.generators.harary_graph import hnm_harary_graph
 
 from tsm.compaction import Compaction
 from tsm.rectangularize import Rectangularize
@@ -66,7 +67,6 @@ class RectangularizeGraph(unittest.TestCase):
         orthogonalized = Orthogonalize(planarized)
         compacted = Rectangularize(orthogonalized)
 
-
     def test_compact_k_4(self):
         graph = nx.complete_graph(4)
         processed = Preprocess(graph)
@@ -74,7 +74,6 @@ class RectangularizeGraph(unittest.TestCase):
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
         compacted = Rectangularize(orthogonalized)
-
 
     def test_compact_star_5(self):
         graph = nx.star_graph(5)
@@ -100,7 +99,6 @@ class RectangularizeGraph(unittest.TestCase):
         orthogonalized = Orthogonalize(planarized)
         compacted = Rectangularize(orthogonalized)
 
-
     def test_compact_petersen_graph(self):
         graph = nx.petersen_graph()
         processed = Preprocess(graph)
@@ -112,20 +110,84 @@ class RectangularizeGraph(unittest.TestCase):
 
 class CompactGraph(unittest.TestCase):
     def test_compact_k_5(self):
-        graph = nx.complete_graph(3)
+        graph = nx.complete_graph(5)
         processed = Preprocess(graph)
         simplified = Simplify(processed)
         planarized = Planarize(simplified)
         orthogonalized = Orthogonalize(planarized)
         rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
 
+    def test_compact_star_7(self):
+        graph = nx.star_graph(7)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
 
-        viewg = nx.Graph()
-        for node in rectangularized.G.nodes():
-            viewg.add_node(node, label=str(node))
-        viewg.add_edges_from(rectangularized.G.edges())
-        nx.write_graphml(viewg, 'out.graphml')
+    def test_compact_k_6(self):
+        graph = nx.complete_graph(6)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
 
+    def test_compact_k_9(self):
+        graph = nx.complete_graph(9)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
+
+    def test_compact_k_10(self):
+        graph = nx.complete_graph(10)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
+
+    def test_compact_cycle_5(self):
+        graph = nx.cycle_graph(5)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
+
+    def test_compact_single_edge(self):
+        graph = nx.complete_graph(2)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
+
+    def test_compact_find_bad(self):
+        graph = nx.complete_graph(14)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
+        compacted = Compaction(rectangularized)
+
+    def test_goldman_harary(self):
+        graph = hnm_harary_graph(11, 27)
+        processed = Preprocess(graph)
+        simplified = Simplify(processed)
+        planarized = Planarize(simplified)
+        orthogonalized = Orthogonalize(planarized)
+        rectangularized = Rectangularize(orthogonalized)
         compacted = Compaction(rectangularized)
 
 

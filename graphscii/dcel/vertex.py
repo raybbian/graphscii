@@ -21,7 +21,7 @@ class Vertex:
         raise Exception("not find")
 
     def __repr__(self):
-        return f'vertex({self.id})'
+        return f'v({self.id})'
 
     def __hash__(self):
         return hash(self.id)
