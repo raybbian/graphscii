@@ -192,7 +192,7 @@ class CompactGraph(unittest.TestCase):
 class DisplayGraph(unittest.TestCase):
     def test_print(self):
         start = timer()
-        graph = nx.gnm_random_graph(10, 30)
+        graph = nx.gnm_random_graph(8, 15)
         after_graph = timer()
         processed = Preprocess(graph)
         after_process = timer()
@@ -209,7 +209,7 @@ class DisplayGraph(unittest.TestCase):
         display = Display(compacted)
         end = timer()
 
-        display.write_to_file("output.txt")
+        print(display.build_output())
 
         print(f'Processing graph with {nx.number_of_nodes(graph)} nodes and {nx.number_of_edges(graph)} edges')
         print(f'Created graph in {after_graph - start} seconds')
@@ -225,7 +225,7 @@ class DisplayGraph(unittest.TestCase):
 
 class TestProcess(unittest.TestCase):
     def test_process(self):
-        graph = nx.gnm_random_graph(8, 20)
+        graph = nx.petersen_graph()
         print(to_ascii(graph, with_labels=True))
 
 

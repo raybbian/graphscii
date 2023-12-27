@@ -17,7 +17,7 @@ class Compaction:
         self.ori_edges = rectangularize.ori_edges
 
         if with_labels:
-            max_label_w = max(len(label) for label in self.G.nodes())
+            max_label_w = max(len(str(label[1])) for label in self.G.nodes())
         else:
             max_label_w = 0
 

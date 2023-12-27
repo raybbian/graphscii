@@ -1,6 +1,7 @@
 from timeit import default_timer as timer
 
 import networkx as nx
+from matplotlib import pyplot as plt
 
 from .compaction import Compaction
 from .display import Display
@@ -14,10 +15,10 @@ from .simplify import Simplify
 def to_ascii(graph: nx.Graph, verbose=False, with_labels=False):
     start = timer()
     out = ""
-    for component in [graph.subgraph(c).copy() for c in nx.connected_components(graph)]:
+    for component in [graph.subgraph(c) for c in nx.connected_components(graph)]:
         if nx.number_of_nodes(component) == 1:
-            single_node = list(graph.nodes())[0]
-            out += handle_degenerate(single_node)
+            single_node = list(component.nodes())[0]
+            out += handle_degenerate(single_node, with_labels)
             continue
         processed = Preprocess(component)
         simplified = Simplify(processed)
@@ -36,9 +37,17 @@ def to_ascii(graph: nx.Graph, verbose=False, with_labels=False):
 
     return out
 
-def handle_degenerate(vertex_id):
-    return """
-     ┏━┓ 
-     ┃ ┃
-     ┗━┛
-    """
+def handle_degenerate(vertex_id, with_labels=False):
+    if with_labels:
+        vertex_id = str(vertex_id)
+        return f"""
+         ┏━{'━' * len(vertex_id)}━┓ 
+         ┃ {vertex_id} ┃
+         ┗━{'━' * len(vertex_id)}━┛
+        """
+    else:
+        return f"""
+         ┏━━━┓ 
+         ┃   ┃
+         ┗━━━┛
+        """
