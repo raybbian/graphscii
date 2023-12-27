@@ -81,7 +81,6 @@ my ~~terrible~~ code is greatly appreciated.
 - [ ] Successive shortest path algorithm, modified for negative cycles of length
       2 (potentially could speed up process on large graphs, compared to MILP
       solution, see [2]).
-- [ ]
 
 ## Citations
 
