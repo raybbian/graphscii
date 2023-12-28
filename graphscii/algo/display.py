@@ -110,9 +110,9 @@ class Display:
             self.draw_box(x, y, self.v_w, self.v_h)
             if with_labels:
                 label_len = len(str(vertex[1]))
-                mid_ind = label_len // 2
+                mid_ind = label_len + 1 // 2
                 for c in range(label_len):
-                    self.output[y][x + c - mid_ind + 1] = str(vertex[1])[c]
+                    self.output[y][x + c - mid_ind] = str(vertex[1])[c]
 
     def draw_edges(self):
         for edge in self.ori_edges:
