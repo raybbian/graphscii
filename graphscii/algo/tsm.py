@@ -1,7 +1,6 @@
 from timeit import default_timer as timer
 
 import networkx as nx
-from matplotlib import pyplot as plt
 
 from .compaction import Compaction
 from .display import Display
@@ -32,22 +31,16 @@ def to_ascii(graph: nx.Graph, verbose=False, with_labels=False):
     end = timer()
 
     if verbose:
-        print(f'Processing graph (component) with {nx.number_of_nodes(graph)} nodes and {nx.number_of_edges(graph)} edges')
+        print(
+            f'Processing graph (component) with {nx.number_of_nodes(graph)} nodes and {nx.number_of_edges(graph)} edges')
         print(f'Took total of {end - start} seconds')
 
     return out
 
+
 def handle_degenerate(vertex_id, with_labels=False):
     if with_labels:
         vertex_id = str(vertex_id)
-        return f"""
-         ┏━{'━' * len(vertex_id)}━┓ 
-         ┃ {vertex_id} ┃ 
-         ┗━{'━' * len(vertex_id)}━┛ 
-        """
+        return f"┏━{'━' * len(vertex_id)}━┓\n┃ {vertex_id} ┃\n┗━{'━' * len(vertex_id)}━┛"
     else:
-        return f"""
-         ┏━━━┓ 
-         ┃   ┃ 
-         ┗━━━┛ 
-        """
+        return f"┏━━━┓\n┃   ┃\n┗━━━┛"
