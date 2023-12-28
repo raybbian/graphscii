@@ -41,6 +41,6 @@ def to_ascii(graph: nx.Graph, verbose=False, with_labels=False):
 def handle_degenerate(vertex_id, with_labels=False):
     if with_labels:
         vertex_id = str(vertex_id)
-        return f"┏━{'━' * len(vertex_id)}━┓\n┃ {vertex_id} ┃\n┗━{'━' * len(vertex_id)}━┛"
+        return f"┏━{'━' * len(vertex_id)}━┓\n┃ {vertex_id} ┃\n┗━{'━' * len(vertex_id)}━┛\n"
     else:
-        return f"┏━━━┓\n┃   ┃\n┗━━━┛"
+        return f"┏━━━┓\n┃   ┃\n┗━━━┛\n"
