@@ -42,12 +42,12 @@ def handle_degenerate(vertex_id, with_labels=False):
         vertex_id = str(vertex_id)
         return f"""
          ┏━{'━' * len(vertex_id)}━┓ 
-         ┃ {vertex_id} ┃
-         ┗━{'━' * len(vertex_id)}━┛
+         ┃ {vertex_id} ┃ 
+         ┗━{'━' * len(vertex_id)}━┛ 
         """
     else:
         return f"""
          ┏━━━┓ 
-         ┃   ┃
-         ┗━━━┛
+         ┃   ┃ 
+         ┗━━━┛ 
         """

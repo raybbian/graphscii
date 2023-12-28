@@ -1,5 +1,5 @@
 from .compaction import Compaction
-from .utils import v_is_vertex
+from .utils import v_is_vertex, v_is_rect_dummy
 
 
 class BoxChar:
@@ -92,10 +92,10 @@ class Display:
         self.ori_edges = compaction.ori_edges
         self.bend_offsets = compaction.bend_offsets
 
-        self.minx = min(c[0] for c in self.pos.values())
-        self.maxx = max(c[0] for c in self.pos.values())
-        self.miny = min(c[1] for c in self.pos.values())
-        self.maxy = max(c[1] for c in self.pos.values())
+        self.minx = min(c[0] for v, c in self.pos.items() if not v_is_rect_dummy(v)) - self.v_w
+        self.maxx = max(c[0] for v, c in self.pos.items() if not v_is_rect_dummy(v)) + self.v_w
+        self.miny = min(c[1] for v, c in self.pos.items() if not v_is_rect_dummy(v)) - self.v_h
+        self.maxy = max(c[1] for v, c in self.pos.items() if not v_is_rect_dummy(v)) + self.v_h
 
         self.output = {r: {c: BoxChar(0) for c in range(self.minx, self.maxx + 1)} for r in
                        range(self.miny, self.maxy + 1)}
