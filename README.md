@@ -3,7 +3,7 @@
 An application that prints ASCII representations of graphs! Implemented with
 Topology-Shape-Metrics [1]. Huge thanks to https://github.com/uknfire/tsmpy for
 their Doubly Connected Edge List and Compaction implementations. You can find
-some examples of graphscii's example outputs
+some examples of graphscii's outputs
 [here.](https://github.com/raybbian/graphscii/tree/main/examples/)
 
 ## Features
