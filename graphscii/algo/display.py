@@ -170,12 +170,13 @@ class Display:
             raise Exception("Input coordinates are not lines")
 
     def build_output(self):
-        out = ""
+        out = []
         for r in range(self.miny, self.maxy + 1):
+            line = []
             for c in range(self.minx, self.maxx + 1):
-                out += self.output[r][c].char() if type(self.output[r][c]) is BoxChar else self.output[r][c]
-            out += '\n'
-        return out
+                line.append(self.output[r][c].char() if type(self.output[r][c]) is BoxChar else self.output[r][c])
+            out.append(line)
+        return "\n".join("".join(line) for line in out)
 
     def write_to_file(self, path="./output.txt"):
         with open(path, "w") as f:

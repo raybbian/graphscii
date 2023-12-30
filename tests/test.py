@@ -225,7 +225,7 @@ class DisplayGraph(unittest.TestCase):
 
 class TestProcess(unittest.TestCase):
     def test_process(self):
-        graph = nx.petersen_graph()
+        graph = nx.gnp_random_graph(15, 0.5)
         print(to_ascii(graph, with_labels=True))
 
 
