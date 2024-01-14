@@ -176,6 +176,7 @@ class Display:
             for c in range(self.minx, self.maxx + 1):
                 line.append(self.output[r][c].char() if type(self.output[r][c]) is BoxChar else self.output[r][c])
             out.append(line)
+        out.append("")
         return "\n".join("".join(line) for line in out)
 
     def write_to_file(self, path="./output.txt"):
